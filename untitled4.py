@@ -10,7 +10,6 @@ Original file is located at
 import pandas as pd
 import requests
 import streamlit as st
-import matplotlib.pyplot as plt
 import io
 
 
@@ -114,60 +113,5 @@ if df is not None:
             data=convertir_a_excel(df_filtrado),
             file_name='datos_filtrados.xlsx',
             mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    # Título de la aplicación
-    st.title("Gráficos Interactivos con Streamlit")
-    
-    # Cargar archivo o usar ejemplo
-    st.subheader("Carga de Datos")
-    uploaded_file = st.file_uploader("Sube un archivo CSV o Excel:", type=["csv", "xlsx"])
-    
-    if uploaded_file:
-        try:
-            # Detectar formato y cargar archivo
-            if uploaded_file.name.endswith('.csv'):
-                df = pd.read_csv(uploaded_file)
-            elif uploaded_file.name.endswith('.xlsx'):
-                df = pd.read_excel(uploaded_file)
-            st.success("Archivo cargado exitosamente.")
-        except Exception as e:
-            st.error(f"Error al cargar el archivo: {e}")
-            df = pd.DataFrame()
-    else:
-        # Crear un DataFrame de ejemplo si no se sube archivo
-        st.info("Usando datos de ejemplo porque no se subió archivo.")
-        data = {'Categoría': ['A', 'B', 'C', 'D', 'E'],'Valor 1': [10, 20, 30, 40, 50],'Valor 2': [15, 25, 35, 45, 55],'Valor 3': [5, 15, 25, 35, 45],}
-        df = pd.DataFrame(data)
-    
-    # Verificar si el DataFrame tiene datos
-    if df.empty:
-        st.error("No hay datos disponibles. Sube un archivo para continuar.")
-    else:
-        # Mostrar los datos originales
-        st.subheader("Datos Originales")
-        st.write(df)
-    
-        # Sección de gráficos interactivos
-        st.subheader("Gráficos Interactivos")
-    
-        # Selección de tipo de gráfico
-        tipo_grafico = st.selectbox("Selecciona el tipo de gráfico:",
-                                    ["Dispersión", "Línea", "Barras", "Histograma", "Pastel"])
-    
-        # Selección de variables
-        columnas_numericas = df.select_dtypes(include=['number']).columns
-        if len(columnas_numericas) > 0:
-            columna_x = st.selectbox("Selecciona la columna para el eje X:", columnas_numericas)
-            columna_y = st.selectbox("Selecciona la columna para el eje Y:", columnas_numericas)
-    
-            # Ajuste de rango para los ejes
-            st.subheader("Ajustar Rango de los Ejes")
-            rango_x = st.slider("Rango del eje X:",
-                                float(df[columna_x].min()),
-                                float(df[columna_x].max()),
-                                (float(df[columna_x].min()), float(df[columna_x].max())))
-            rango_y = st.slider("Rango del eje Y:",
-                                float(df[columna_y].min()),
-                                float(df[columna_y].max()),
-                                (float(df[columna_y].min()), float(df[columna_y].max())))
     
            
