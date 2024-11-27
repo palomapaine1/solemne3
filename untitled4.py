@@ -21,9 +21,6 @@ def obtener_datos_api(api_url):
         st.error(f"Error al obtener los datos de la API: {response.status_code}")
         return None
         
-# Llamar la función para obtener los datos
-api_url = "https://restcountries.com/v3.1/all"
-df = obtener_datos_api(api_url)
 
 if df is not None:
     st.title("Análisis de datos de países")
