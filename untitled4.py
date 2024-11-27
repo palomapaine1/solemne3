@@ -23,6 +23,8 @@ def obtener_datos_api(api_url):
     else:
         st.error(f"Error al obtener los datos de la API: {response.status_code}")
         return None
+# Título de la aplicación
+st.title("Interacción con Datos - Streamlit")
 # Cargar un archivo
 st.subheader("Cargar archivo")
 uploaded_file = st.file_uploader("Sube un archivo CSV o Excel", type=["csv", "xlsx"])
