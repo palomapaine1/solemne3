@@ -23,25 +23,45 @@ def obtener_datos_api(api_url):
     else:
         st.error(f"Error al obtener los datos de la API: {response.status_code}")
         return None
-if response.status_code == 200:
-# Convertir los datos JSON en un DataFrame de Pandas
-data = response.json()
-df = pd.DataFrame(data)
-# Mostrar los primeros registros
-st.write('Datos obtenidos de la API:')
-st.write(df.head())
-# Seleccionar una columna para mostrar en Streamlit
-columnas = st.multiselect('Selecciona las columnas a visualizar',
-df.columns.tolist(), default=df.columns.tolist())
-df_seleccionado = df[columnas]
-# Mostrar el DataFrame con las columnas seleccionadas
-st.write('Datos seleccionados:')
-st.write(df_seleccionado)
-# Filtro por ID
-id_filtro = st.slider('Filtrar por ID (entre 1 y 100)', 1, 100, 50)
-df_filtrado = df[df['id'] <= id_filtro]
-st.write(f'Mostrando datos donde ID <= {id_filtro}:')
-st.write(df_filtrado)
+# Cargar un archivo
+st.subheader("Cargar archivo")
+uploaded_file = st.file_uploader("Sube un archivo CSV o Excel", type=["csv", "xlsx"])
+
+# Si se carga un archivo
+if uploaded_file:
+    # Determinar tipo de archivo y leer datos
+    if uploaded_file.name.endswith(".csv"):
+        data = pd.read_csv(uploaded_file)
+    elif uploaded_file.name.endswith(".xlsx"):
+        data = pd.read_excel(uploaded_file)
+
+    # Mostrar opciones para interactuar
+    st.subheader("Opciones para interactuar con los datos")
+
+    # Seleccionar una columna
+    selected_column = st.selectbox("Selecciona una columna para visualizar", data.columns)
+
+    # Mostrar datos de la columna seleccionada
+    st.write("Datos de la columna seleccionada:")
+    st.write(data[selected_column])
+
+    # Filtrar datos con un slider si es una columna numérica
+    if pd.api.types.is_numeric_dtype(data[selected_column]):
+        min_val = int(data[selected_column].min())
+        max_val = int(data[selected_column].max())
+        slider_range = st.slider("Selecciona un rango", min_val, max_val, (min_val, max_val))
+        filtered_data = data[(data[selected_column] >= slider_range[0]) & (data[selected_column] <= slider_range[1])]
+        st.write("Datos filtrados:")
+        st.write(filtered_data)
+    else:
+        st.write("La columna seleccionada no es numérica, por lo que no se puede filtrar.")
+
+    # Botón para mostrar todos los datos
+    if st.button("Mostrar datos originales"):
+        st.subheader("Datos originales:")
+        st.write(data)
+else:
+    st.write("Por favor, sube un archivo para comenzar.")
 
 
 
