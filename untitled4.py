@@ -81,6 +81,5 @@ if df_countries is not None:
     st.download_button(
         label="Descargar datos filtrados en CSV",
         data=convertir_a_csv(df_filtrado),
-        file_name="datos_filtrados.csv",
-        mime="text/csv")
+        file_name="datos_filtrados.csv", mime="text/csv")
 
