@@ -41,45 +41,5 @@ st.header("Datos de REST Countries")
 api_url_countries = "https://restcountries.com/v3.1/all"
 df_countries = obtener_datos_api(api_url_countries)
 
-if df_countries is not None:
-    # Procesar datos específicos de REST Countries
-    df_countries['Nombre'] = df_countries['name'].apply(lambda x: x.get('common', 'Desconocido') if isinstance(x, dict) else 'Desconocido')
-    df_countries['Región'] = df_countries['region']
-    df_countries['Población'] = df_countries['population']
-    df_countries['Área (km²)'] = df_countries['area']
 
-    # Crear un DataFrame reducido para mostrar
-    columnas = ['Nombre', 'Región', 'Población', 'Área (km²)']
-    df_mostrado = df_countries[columnas]
-
-    st.write("Datos procesados de REST Countries:")
-    st.write(df_mostrado.head())
-
-    # Ejemplo: Estadísticas de población
-    st.subheader("Estadísticas de Población")
-    st.write("Población máxima:", df_mostrado['Población'].max())
-    st.write("Población mínima:", df_mostrado['Población'].min())
-    st.write("Población promedio:", df_mostrado['Población'].mean())
-
-    # Filtrado de datos por población
-    st.subheader("Filtrar países por población")
-    min_poblacion, max_poblacion = st.slider(
-        "Selecciona el rango de población:",
-        int(df_mostrado['Población'].min()),
-        int(df_mostrado['Población'].max()),
-        (int(df_mostrado['Población'].min()), int(df_mostrado['Población'].max())))
-    df_filtrado = df_mostrado[(df_mostrado['Población'] >= min_poblacion) & (df_mostrado['Población'] <= max_poblacion)]
-    st.write("Países filtrados:")
-    st.write(df_filtrado)
-
-    # Descarga de datos filtrados
-    st.subheader("Descargar datos filtrados")
-    @st.cache_data
-    def convertir_a_csv(df):
-        return df.to_csv(index=False).encode('utf-8')
-
-    st.download_button(
-        label="Descargar datos filtrados en CSV",
-        data=convertir_a_csv(df_filtrado),
-        file_name="datos_filtrados.csv", mime="text/csv")
 
