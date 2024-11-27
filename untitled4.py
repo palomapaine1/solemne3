@@ -27,19 +27,7 @@ def obtener_datos_api(api_url):
 # Título de la aplicación
 st.title('Aplicación Web: Datos desde una API REST')
 
-# API 1: JSONPlaceholder
-st.header("Datos de JSONPlaceholder")
-api_url_placeholder = 'https://jsonplaceholder.typicode.com/posts'
-df_placeholder = obtener_datos_api(api_url_placeholder)
 
-if df_placeholder is not None:
-    st.write("Datos obtenidos de la API JSONPlaceholder:")
-    st.write(df_placeholder.head())
-
-# API 2: REST Countries
-st.header("Datos de REST Countries")
-api_url_countries = "https://restcountries.com/v3.1/all"
-df_countries = obtener_datos_api(api_url_countries)
 
 
 
