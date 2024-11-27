@@ -27,16 +27,6 @@ def obtener_datos_api(api_url):
 api_url = "https://restcountries.com/v3.1/all"
 df = obtener_datos_api(api_url)
 
-# Mostrar datos y funcionalidades
-if df is not None:
-    st.subheader("Datos originales")
-    st.write(df.head())
-
-    # Selección de columnas
-    columns = st.multiselect("Selecciona columnas para mostrar", options=df.columns.tolist(), default=df.columns.tolist())
-    if columns:
-        st.write("Datos filtrados por columnas:")
-        st.write(df[columns].head())
 
 
 
