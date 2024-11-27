@@ -38,26 +38,6 @@ if df is not None:
         st.write("Datos filtrados por columnas:")
         st.write(df[columns].head())
 
-    # Filtrar por continente si existe esa columna
-    if "continents" in df.columns:
-        continent = st.selectbox("Selecciona un continente", options=df["continents"].explode().dropna().unique())
-        filtered_df = df[df["continents"].explode() == continent]
-        st.write(f"Países en {continent}:")
-        st.write(filtered_df)
-
-    # Mostrar gráfico de ejemplo
-    if "population" in df.columns and "name" in df.columns:
-        st.subheader("Gráfico de población por país")
-        df_population = df[["name", "population"]].dropna()
-        top_countries = df_population.sort_values(by="population", ascending=False).head(10)
-        plt.barh(top_countries["name"], top_countries["population"])
-        plt.xlabel("Población")
-        plt.ylabel("País")
-        plt.title("Top 10 países por población")
-        st.pyplot(plt)
-else:
-    st.error("No se pudieron obtener datos de la API.")
-
 
 
 
