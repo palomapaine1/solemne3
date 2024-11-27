@@ -98,6 +98,38 @@ def pagina_interaccion():
                     data=convertir_a_excel(df_filtrado),
                     file_name='datos_filtrados.xlsx',
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                # Página de gráficos interactivos
+def pagina_graficos():
+    api_url = "https://restcountries.com/v3.1/all"
+    df = obtener_datos_api(api_url)
+    
+    if df is not None:
+        st.title("Gráficos Interactivos")
+
+        # Selección de variables para los gráficos
+        columnas_numericas = df.select_dtypes(include=['number']).columns.tolist()
+        x_col = st.selectbox("Selecciona la variable para el eje X", columnas_numericas)
+        y_col = st.selectbox("Selecciona la variable para el eje Y", columnas_numericas)
+
+        # Rango de ejes
+        x_min, x_max = st.slider(f"Rango para {x_col}", float(df[x_col].min()), float(df[x_col].max()), (float(df[x_col].min()), float(df[x_col].max())))
+        y_min, y_max = st.slider(f"Rango para {y_col}", float(df[y_col].min()), float(df[y_col].max()), (float(df[y_col].min()), float(df[y_col].max())))
+
+        # Tipo de gráfico
+        grafico_tipo = st.selectbox("Selecciona el tipo de gráfico", ["Dispersión", "Línea", "Barra", "Histograma", "Pastel"])
+
+        fig, ax = plt.subplots()
+        
+        if grafico_tipo == "Dispersión":
+            ax.scatter(df[x_col], df[y_col])
+        elif grafico_tipo == "Línea":
+            ax.plot(df[x_col], df[y_col])
+        elif grafico_tipo == "Barra":
+            ax.bar(df[x_col], df[y_col])
+        elif grafico_tipo == "Histograma":
+            ax.hist(df[y_col], bins=30)
+        elif grafico_tipo == "Pastel":
+            ax.pie(df[y
 
 
 
