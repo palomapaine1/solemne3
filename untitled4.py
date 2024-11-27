@@ -23,6 +23,40 @@ def obtener_datos_api(api_url):
     else:
         st.error(f"Error al obtener los datos de la API: {response.status_code}")
         return None
+# URL de la API
+api_url = "https://restcountries.com/v3.1/all"
+df = obtener_datos_api(api_url)
+
+# Mostrar datos y funcionalidades
+if df is not None:
+    st.subheader("Datos originales")
+    st.write(df.head())
+
+    # Selección de columnas
+    columns = st.multiselect("Selecciona columnas para mostrar", options=df.columns.tolist(), default=df.columns.tolist())
+    if columns:
+        st.write("Datos filtrados por columnas:")
+        st.write(df[columns].head())
+
+    # Filtrar por continente si existe esa columna
+    if "continents" in df.columns:
+        continent = st.selectbox("Selecciona un continente", options=df["continents"].explode().dropna().unique())
+        filtered_df = df[df["continents"].explode() == continent]
+        st.write(f"Países en {continent}:")
+        st.write(filtered_df)
+
+    # Mostrar gráfico de ejemplo
+    if "population" in df.columns and "name" in df.columns:
+        st.subheader("Gráfico de población por país")
+        df_population = df[["name", "population"]].dropna()
+        top_countries = df_population.sort_values(by="population", ascending=False).head(10)
+        plt.barh(top_countries["name"], top_countries["population"])
+        plt.xlabel("Población")
+        plt.ylabel("País")
+        plt.title("Top 10 países por población")
+        st.pyplot(plt)
+else:
+    st.error("No se pudieron obtener datos de la API.")
 
 
 
