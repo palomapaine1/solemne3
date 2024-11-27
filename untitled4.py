@@ -10,9 +10,6 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import requests
-import streamlit as st
-import pandas as pd
-import requests
 
 # Función para obtener datos de una API
 def obtener_datos_api(api_url):
