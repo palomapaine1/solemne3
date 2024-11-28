@@ -10,129 +10,151 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import requests
+import matplotlib.pyplot as plt
+import seaborn as sns
+import io
 
-# Cargar los datos
-file_path = "datos_paises_procesados.xlsx"
-df = pd.read_excel(file_path)
-
-# Configurar la estructura de la aplicación multipágina
-st.set_page_config(page_title="Aplicación Multipágina - Streamlit", layout="wide")
-
-# Crear las páginas
-def pagina_descripcion():
-    st.title("Descripción del Proyecto")
-    st.write("""
-    Este proyecto utiliza datos sobre países, incluyendo información como población, área, 
-    número de fronteras, idiomas oficiales y zonas horarias. El objetivo es interactuar con 
-    estos datos y realizar análisis visuales y estadísticos.
+# Función para obtener los datos de la API REST Countries
+def fetch_data():
+    url = "https://restcountries.com/v3.1/all"
+    response = requests.get(url)
+    data = response.json()
+    countries = []
     
-    Los datos fueron obtenidos de una base de datos ficticia que simula información global 
-    de países. Este conjunto de datos puede ser utilizado para explorar diversos aspectos geográficos.
+    for country in data:
+        name = country.get('name', {}).get('common', 'N/A')
+        region = country.get('region', 'N/A')
+        population = country.get('population', 0)
+        area = country.get('area', 0)
+        borders = len(country.get('borders', []))
+        languages = len(country.get('languages', {}))
+        timezones = len(country.get('timezones', []))
+        
+        countries.append({
+            'Name': name,
+            'Region': region,
+            'Population': population,
+            'Area': area,
+            'Borders': borders,
+            'Languages': languages,
+            'Timezones': timezones
+        })
+    
+    return pd.DataFrame(countries)
+
+# Página 1: Descripción del Proyecto
+def page_1():
+    st.title("Descripción del Proyecto")
+    st.header("Base de Datos: REST Countries")
+    st.write("""
+    Este proyecto utiliza la API de REST Countries para obtener información sobre los países del mundo. 
+    Los datos incluyen información como el nombre del país, región geográfica, población total, área, 
+    número de países con frontera, número de idiomas oficiales y número de zonas horarias.
     """)
-    st.markdown("[Enlace a la fuente de datos ficticia](https://example.com)")
-    st.write("Vista previa de los datos:")
-    st.dataframe(df)
-
-def pagina_interaccion():
+    st.markdown("### Enlace a la API: [REST Countries](https://restcountries.com/v3.1/all)")
+    
+# Página 2: Interacción con los Datos
+def page_2():
     st.title("Interacción con los Datos")
-
-    # Mostrar los datos originales
-    if st.checkbox("Mostrar datos originales"):
+    
+    # Cargar datos
+    df = fetch_data()
+    
+    # Mostrar datos originales
+    if st.button('Mostrar Datos'):
         st.dataframe(df)
-
+    
     # Selección de columna para estadísticas
-    columna = st.selectbox("Selecciona una columna numérica para análisis estadístico:", 
-                           ["Poblacion_total", "Area_km²", "Numero_frontera", "Numero_idiomas", "Numero_zonas_horarias"])
-    if columna:
-        st.write(f"**Análisis Estadístico de la columna {columna}:**")
-        st.write(f"Media: {df[columna].mean():,.2f}")
-        st.write(f"Mediana: {df[columna].median():,.2f}")
-        st.write(f"Desviación estándar: {df[columna].std():,.2f}")
-
+    column = st.selectbox("Seleccionar columna para estadísticas", df.columns)
+    if column:
+        st.write(f"Estadísticas de la columna: {column}")
+        st.write(f"Media: {df[column].mean()}")
+        st.write(f"Mediana: {df[column].median()}")
+        st.write(f"Desviación estándar: {df[column].std()}")
+    
     # Ordenar los datos
-    columna_ordenar = st.selectbox("Selecciona una columna para ordenar los datos:", 
-                                   ["Poblacion_total", "Area_km²", "Numero_frontera", "Numero_idiomas", "Numero_zonas_horarias"])
-    if columna_ordenar:
-        orden = st.radio("Selecciona el orden:", ["Ascendente", "Descendente"])
-        df_ordenado = df.sort_values(by=columna_ordenar, ascending=(orden == "Ascendente"))
-        st.dataframe(df_ordenado)
-
-    # Filtrar filas
-    columna_filtrar = "Poblacion_total"  # Se elige arbitrariamente
-    rango = st.slider("Selecciona un rango de población:", 
-                      int(df[columna_filtrar].min()), int(df[columna_filtrar].max()), 
-                      (int(df[columna_filtrar].min()), int(df[columna_filtrar].max())))
-    df_filtrado = df[(df[columna_filtrar] >= rango[0]) & (df[columna_filtrar] <= rango[1])]
+    sort_column = st.selectbox("Seleccionar columna para ordenar", df.columns)
+    ascending = st.radio("Ordenar ascendente", [True, False])
+    sorted_df = df.sort_values(by=sort_column, ascending=ascending)
+    st.write("Datos ordenados:")
+    st.dataframe(sorted_df)
+    
+    # Filtrar por columna numérica
+    filter_column = st.selectbox("Seleccionar columna para filtrar", df.select_dtypes(include=['int64', 'float64']).columns)
+    min_value = st.slider(f"Valor mínimo para {filter_column}", float(df[filter_column].min()), float(df[filter_column].max()))
+    filtered_df = df[df[filter_column] >= min_value]
     st.write("Datos filtrados:")
-    st.dataframe(df_filtrado)
-
-    # Botón para descargar los datos filtrados
+    st.dataframe(filtered_df)
+    
+    # Descargar los datos filtrados
     @st.cache
-    def convertir_csv(df):
-        return df.to_csv(index=False).encode('utf-8')
+    def convert_df(df):
+        return df.to_csv().encode('utf-8')
 
-    csv = convertir_csv(df_filtrado)
-    st.download_button(label="Descargar datos filtrados en CSV", 
-                       data=csv, 
-                       file_name="datos_filtrados.csv", 
-                       mime="text/csv")
+    csv = convert_df(filtered_df)
+    st.download_button("Descargar CSV", csv, "datos_filtrados.csv", "text/csv")
 
-def pagina_graficos():
+# Página 3: Gráficos Interactivos
+def page_3():
     st.title("Gráficos Interactivos")
-
+    
+    # Cargar datos
+    df = fetch_data()
+    
     # Selección de variables
-    st.sidebar.header("Configuración del gráfico")
-    x = st.sidebar.selectbox("Selecciona la variable para el eje X:", 
-                             ["Poblacion_total", "Area_km²", "Numero_frontera", "Numero_idiomas", "Numero_zonas_horarias"])
-    y = st.sidebar.selectbox("Selecciona la variable para el eje Y:", 
-                             ["Poblacion_total", "Area_km²", "Numero_frontera", "Numero_idiomas", "Numero_zonas_horarias"])
-
-    # Rango personalizado
-    rango_x = st.sidebar.slider(f"Rango para {x}:", 
-                                int(df[x].min()), int(df[x].max()), 
-                                (int(df[x].min()), int(df[x].max())))
-    rango_y = st.sidebar.slider(f"Rango para {y}:", 
-                                int(df[y].min()), int(df[y].max()), 
-                                (int(df[y].min()), int(df[y].max())))
-
-    # Selección del tipo de gráfico
-    tipo_grafico = st.sidebar.radio("Selecciona el tipo de gráfico:", 
-                                    ["Dispersión", "Línea", "Barras", "Histograma"])
-
+    x_column = st.selectbox("Seleccionar columna para el eje X", df.select_dtypes(include=['int64', 'float64']).columns)
+    y_column = st.selectbox("Seleccionar columna para el eje Y", df.select_dtypes(include=['int64', 'float64']).columns)
+    
+    # Rango personalizado para los ejes
+    x_min, x_max = float(df[x_column].min()), float(df[x_column].max())
+    y_min, y_max = float(df[y_column].min()), float(df[y_column].max())
+    
+    x_range = st.slider(f"Seleccionar rango para {x_column}", x_min, x_max, (x_min, x_max))
+    y_range = st.slider(f"Seleccionar rango para {y_column}", y_min, y_max, (y_min, y_max))
+    
+    # Filtrar los datos según el rango
+    filtered_graph_df = df[(df[x_column] >= x_range[0]) & (df[x_column] <= x_range[1]) & 
+                           (df[y_column] >= y_range[0]) & (df[y_column] <= y_range[1])]
+    
+    # Selección de tipo de gráfico
+    chart_type = st.selectbox("Seleccionar tipo de gráfico", ['Bar', 'Line', 'Scatter', 'Histogram'])
+    
     # Generar el gráfico
-    plt.figure(figsize=(10, 6))
-    if tipo_grafico == "Dispersión":
-        plt.scatter(df[x], df[y], alpha=0.7)
-    elif tipo_grafico == "Línea":
-        plt.plot(df[x], df[y], alpha=0.7)
-    elif tipo_grafico == "Barras":
-        plt.bar(df[x], df[y], alpha=0.7)
-    elif tipo_grafico == "Histograma":
-        plt.hist(df[x], bins=20, alpha=0.7, label=x)
-        plt.hist(df[y], bins=20, alpha=0.7, label=y)
-        plt.legend()
+    fig, ax = plt.subplots()
+    if chart_type == 'Bar':
+        ax.bar(filtered_graph_df[x_column], filtered_graph_df[y_column])
+    elif chart_type == 'Line':
+        ax.plot(filtered_graph_df[x_column], filtered_graph_df[y_column])
+    elif chart_type == 'Scatter':
+        ax.scatter(filtered_graph_df[x_column], filtered_graph_df[y_column])
+    elif chart_type == 'Histogram':
+        ax.hist(filtered_graph_df[y_column], bins=20)
+    
+    st.pyplot(fig)
+    
+    # Opción de descargar el gráfico como PNG
+    def savefig_to_png(fig):
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png")
+        buf.seek(0)
+        return buf
+    
+    png_buf = savefig_to_png(fig)
+    st.download_button(label="Descargar gráfico como PNG", data=png_buf, file_name="grafico.png", mime="image/png")
 
-    plt.title(f"{tipo_grafico} de {x} vs {y}")
-    plt.xlim(rango_x)
-    plt.ylim(rango_y)
-    plt.xlabel(x)
-    plt.ylabel(y)
-    st.pyplot(plt)
+# Configuración de las páginas en Streamlit
+def main():
+    st.sidebar.title("Menú de Navegación")
+    page = st.sidebar.radio("Selecciona una página", ["Descripción del Proyecto", "Interacción con los Datos", "Gráficos Interactivos"])
 
-    # Botón para descargar el gráfico
-    st.sidebar.download_button(label="Descargar gráfico en PNG",
-                                data=plt.savefig("grafico.png"),
-                                file_name="grafico.png",
-                                mime="image/png")
+    if page == "Descripción del Proyecto":
+        page_1()
+    elif page == "Interacción con los Datos":
+        page_2()
+    elif page == "Gráficos Interactivos":
+        page_3()
 
-# Seleccionar la página
-pagina = st.sidebar.selectbox("Selecciona una página:", 
-                              ["Descripción del Proyecto", "Interacción con los Datos", "Gráficos Interactivos"])
+if __name__ == "__main__":
+    main()
 
-if pagina == "Descripción del Proyecto":
-    pagina_descripcion()
-elif pagina == "Interacción con los Datos":
-    pagina_interaccion()
-elif pagina == "Gráficos Interactivos":
-    pagina_graficos()
 
