@@ -130,6 +130,15 @@ def pagina_graficos():
             ax.hist(df[y_col], bins=30)
         elif grafico_tipo == "Pastel":
             ax.pie(df[yx_col], df[y_col])
+        # Mostrar el gráfico
+    st.plotly_chart(fig)
+    
+    # Botón para descargar el gráfico en PNG
+    st.download_button(
+        "Descargar Gráfico",
+        data=fig.to_image(format="png"),
+        file_name="grafico.png",
+        mime="image/png",)
 
 
 
