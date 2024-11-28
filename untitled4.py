@@ -9,7 +9,7 @@ Original file is located at
 
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import requests
 
 # Cargar los datos
 file_path = "datos_paises_procesados.xlsx"
