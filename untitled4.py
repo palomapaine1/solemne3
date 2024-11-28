@@ -47,5 +47,23 @@ if df is not None:
     # Filtrar columnas seleccionadas
     columnas = ['Nombre', 'Región', 'Población', 'Área (km²)', 'Fronteras', 'Idiomas Oficiales', 'Zonas Horarias']
     df_cleaned = df[columnas]
+    # Mostrar DataFrame con las columnas seleccionadas
+    st.title("Interacción con los datos:")
+    st.write("Mostrar datos originales:")
+    st.dataframe(df_cleaned)
+
+    st.header("Selecciona una columna del dataframe utilizando un menú desplegable")
+    columnas = st.multiselect('Selecciona las columnas a visualizar', df_cleaned.columns.tolist(), default=df_cleaned.columns.tolist())
+    df_seleccionado = df_cleaned[columnas]
+    # Mostrar el DataFrame con las columnas seleccionadas
+    st.write('Columna Selecionada:')
+    st.write(df_seleccionado)
+    st.write("Estadísticas de las columnas seleccionadas:")
+    st.write("Media:",)
+    st.write(df_seleccionado.mean(numeric_only=True))
+    st.write("Mediana:",)
+    st.write(df_seleccionado.mean(numeric_only=True))
+    st.write("Desviación estándar:",)
+    st.write(df_seleccionado.std(numeric_only=True))
     
 
