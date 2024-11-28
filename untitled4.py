@@ -7,151 +7,24 @@ Original file is located at
     https://colab.research.google.com/drive/1k0fIl6AsDlfP7jvP5XyYYPHWhimSvFwA
 """
 
-import streamlit as st
 import pandas as pd
 import requests
+import streamlit as st
 
-# Función para obtener los datos de la API REST Countries
-def fetch_data():
-    url = "https://restcountries.com/v3.1/all"
-    response = requests.get(url)
+# Título de la aplicación
+st.title('Aplicación Web: Datos desde una API REST')
+# URL de la API REST (puedes cambiarla por cualquier API pública que devuelva JSON)
+api_url = 'https://jsonplaceholder.typicode.com/posts'
+# Realizar la petición a la API
+response = requests.get(api_url)
+# Verificar que la respuesta sea exitosa (código 200)
+if response.status_code == 200:
+    # Convertir los datos JSON en un DataFrame de Pandas
     data = response.json()
-    countries = []
-    
-    for country in data:
-        name = country.get('name', {}).get('common', 'N/A')
-        region = country.get('region', 'N/A')
-        population = country.get('population', 0)
-        area = country.get('area', 0)
-        borders = len(country.get('borders', []))
-        languages = len(country.get('languages', {}))
-        timezones = len(country.get('timezones', []))
-        
-        countries.append({
-            'Name': name,
-            'Region': region,
-            'Population': population,
-            'Area': area,
-            'Borders': borders,
-            'Languages': languages,
-            'Timezones': timezones
-        })
-    
-    return pd.DataFrame(countries)
-
-# Página 1: Descripción del Proyecto
-def page_1():
-    st.title("Descripción del Proyecto")
-    st.header("Base de Datos: REST Countries")
-    st.write("""
-    Este proyecto utiliza la API de REST Countries para obtener información sobre los países del mundo. 
-    Los datos incluyen información como el nombre del país, región geográfica, población total, área, 
-    número de países con frontera, número de idiomas oficiales y número de zonas horarias.
-    """)
-    st.markdown("### Enlace a la API: [REST Countries](https://restcountries.com/v3.1/all)")
-    
-# Página 2: Interacción con los Datos
-def page_2():
-    st.title("Interacción con los Datos")
-    
-    # Cargar datos
-    df = fetch_data()
-    
-    # Mostrar datos originales
-    if st.button('Mostrar Datos'):
-        st.dataframe(df)
-    
-    # Selección de columna para estadísticas
-    column = st.selectbox("Seleccionar columna para estadísticas", df.columns)
-    if column:
-        st.write(f"Estadísticas de la columna: {column}")
-        st.write(f"Media: {df[column].mean()}")
-        st.write(f"Mediana: {df[column].median()}")
-        st.write(f"Desviación estándar: {df[column].std()}")
-    
-    # Ordenar los datos
-    sort_column = st.selectbox("Seleccionar columna para ordenar", df.columns)
-    ascending = st.radio("Ordenar ascendente", [True, False])
-    sorted_df = df.sort_values(by=sort_column, ascending=ascending)
-    st.write("Datos ordenados:")
-    st.dataframe(sorted_df)
-    
-    # Filtrar por columna numérica
-    filter_column = st.selectbox("Seleccionar columna para filtrar", df.select_dtypes(include=['int64', 'float64']).columns)
-    min_value = st.slider(f"Valor mínimo para {filter_column}", float(df[filter_column].min()), float(df[filter_column].max()))
-    filtered_df = df[df[filter_column] >= min_value]
-    st.write("Datos filtrados:")
-    st.dataframe(filtered_df)
-    
-    # Descargar los datos filtrados
-    @st.cache
-    def convert_df(df):
-        return df.to_csv().encode('utf-8')
-
-    csv = convert_df(filtered_df)
-    st.download_button("Descargar CSV", csv, "datos_filtrados.csv", "text/csv")
-
-# Página 3: Gráficos Interactivos
-def page_3():
-    st.title("Gráficos Interactivos")
-    
-    # Cargar datos
-    df = fetch_data()
-    
-    # Selección de variables
-    x_column = st.selectbox("Seleccionar columna para el eje X", df.select_dtypes(include=['int64', 'float64']).columns)
-    y_column = st.selectbox("Seleccionar columna para el eje Y", df.select_dtypes(include=['int64', 'float64']).columns)
-    
-    # Rango personalizado para los ejes
-    x_min, x_max = float(df[x_column].min()), float(df[x_column].max())
-    y_min, y_max = float(df[y_column].min()), float(df[y_column].max())
-    
-    x_range = st.slider(f"Seleccionar rango para {x_column}", x_min, x_max, (x_min, x_max))
-    y_range = st.slider(f"Seleccionar rango para {y_column}", y_min, y_max, (y_min, y_max))
-    
-    # Filtrar los datos según el rango
-    filtered_graph_df = df[(df[x_column] >= x_range[0]) & (df[x_column] <= x_range[1]) & 
-                           (df[y_column] >= y_range[0]) & (df[y_column] <= y_range[1])]
-    
-    # Selección de tipo de gráfico
-    chart_type = st.selectbox("Seleccionar tipo de gráfico", ['Bar', 'Line', 'Scatter', 'Histogram'])
-    
-    # Generar el gráfico
-    fig, ax = plt.subplots()
-    if chart_type == 'Bar':
-        ax.bar(filtered_graph_df[x_column], filtered_graph_df[y_column])
-    elif chart_type == 'Line':
-        ax.plot(filtered_graph_df[x_column], filtered_graph_df[y_column])
-    elif chart_type == 'Scatter':
-        ax.scatter(filtered_graph_df[x_column], filtered_graph_df[y_column])
-    elif chart_type == 'Histogram':
-        ax.hist(filtered_graph_df[y_column], bins=20)
-    
-    st.pyplot(fig)
-    
-    # Opción de descargar el gráfico como PNG
-    def savefig_to_png(fig):
-        buf = io.BytesIO()
-        fig.savefig(buf, format="png")
-        buf.seek(0)
-        return buf
-    
-    png_buf = savefig_to_png(fig)
-    st.download_button(label="Descargar gráfico como PNG", data=png_buf, file_name="grafico.png", mime="image/png")
-
-# Configuración de las páginas en Streamlit
-def main():
-    st.sidebar.title("Menú de Navegación")
-    page = st.sidebar.radio("Selecciona una página", ["Descripción del Proyecto", "Interacción con los Datos", "Gráficos Interactivos"])
-
-    if page == "Descripción del Proyecto":
-        page_1()
-    elif page == "Interacción con los Datos":
-        page_2()
-    elif page == "Gráficos Interactivos":
-        page_3()
-
-if __name__ == "__main__":
-    main()
-
+    df = pd.DataFrame(data)
+    # Mostrar los primeros registros
+    st.write('Datos obtenidos de la API:')
+    st.write(df.head())
+else:
+    st.error('Error al obtener los datos de la API')
 
