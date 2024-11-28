@@ -11,23 +11,11 @@ import streamlit as st
 import pandas as pd
 import requests
 
-# Función para obtener datos de una API
-def obtener_datos_api(api_url):
-    response = requests.get(api_url)
-    if response.status_code == 200:
-        data = response.json()
-        return pd.DataFrame(data)
-    else:
-        st.error(f"Error al obtener los datos de la API: {response.status_code}")
-        return None
-# Página de interacción con los datos
-def pagina_interaccion():
-    api_url = "https://restcountries.com/v3.1/all"
-    df = obtener_datos_api(api_url)
-    
-    if df is not None:
-        st.title("Interacción con los Datos")
-        st.write(df.head())
+# Título de la aplicación
+st.title('Aplicación Web: Datos desde una API REST')
+# Verificar que la respuesta sea exitosa (código 200)
+df= pd.read_csv('datos_paises_procesados.xlsx')
+st.write(df.head())
 
         # Manejar datos ausentes o nulos
         df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else "Sin nombre")
