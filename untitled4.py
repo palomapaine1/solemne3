@@ -12,6 +12,11 @@ import requests
 import streamlit as st
 
 # Título de la aplicación
+import pandas as pd
+import requests
+import streamlit as st
+
+# Título de la aplicación
 st.title('Aplicación Web: Datos desde una API REST')
 # URL de la API REST (puedes cambiarla por cualquier API pública que devuelva JSON)
 api_url = 'https://jsonplaceholder.typicode.com/posts'
@@ -28,12 +33,14 @@ if response.status_code == 200:
 else:
     st.error('Error al obtener los datos de la API')
 
-# Si hay datos, mostrar el DataFrame, mostrar dataframe con las columna seleccionadas, permitir filtrado y mostrar gráficos.
+if df is not None and not df.empty:
+    # Verifica si las columnas necesarias existen
+    # Si hay datos, mostrar el DataFrame, mostrar dataframe con las columna seleccionadas, permitir filtrado y mostrar gráficos.
 
-if df is not None:
-    st.write(df.head())
+    if df is not None:
+      st.write(df.head())
 
-# Selección de columnas relevantes
+    # Selección de columnas relevantes
     df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else None)
     df['Región'] = df['region']
     df['Población'] = df['population']
@@ -45,60 +52,76 @@ if df is not None:
     # Filtrar columnas seleccionadas
     columnas = ['Nombre', 'Región', 'Población', 'Área (km²)', 'Fronteras', 'Idiomas Oficiales', 'Zonas Horarias']
     df_cleaned = df[columnas]
+
     # Mostrar DataFrame con las columnas seleccionadas
     st.title("Interacción con los datos:")
     st.write("Mostrar datos originales:")
     st.dataframe(df_cleaned)
-    import streamlit as st
-import pandas as pd
-import requests
 
-# Función para obtener datos desde la API
-@st.cache_data
-def fetch_data():
-    url = "https://restcountries.com/v3.1/all"
-    response = requests.get(url)
-    data = response.json()
-    countries = []
-    for country in data:
-        try:
-            countries.append({
-                "Nombre": country.get("name", {}).get("common", "Desconocido"),
-                "Población": country.get("population", 0),
-                "Área (km²)": country.get("area", 0),
-                "Fronteras": len(country.get("borders", [])),
-                "Idiomas": len(country.get("languages", {})),
-                "Zonas Horarias": len(country.get("timezones", []))})
-        except Exception as e:
-            print(f"Error procesando el país: {e}")
-    return pd.DataFrame(countries)
+    st.header("Selecciona una columna del dataframe utilizando un menú desplegable")
+    columnas = st.multiselect('Selecciona las columnas a visualizar', df_cleaned.columns.tolist(), default=df_cleaned.columns.tolist())
+    df_seleccionado = df_cleaned[columnas]
+    # Mostrar el DataFrame con las columnas seleccionadas
+    st.write('Columna Selecionada:')
+    st.write(df_seleccionado)
+    st.write("Estadísticas de las columnas seleccionadas:")
+    st.write("Media:",)
+    st.write(df_seleccionado.mean(numeric_only=True))
+    st.write("Mediana:",)
+    st.write(df_seleccionado.mean(numeric_only=True))
+    st.write("Desviación estándar:",)
+    st.write(df_seleccionado.std(numeric_only=True))
 
-# Obtener los datos
-data = fetch_data()
+    columna_ordenar = st.selectbox('Selecciona una columna para ordenar', df_seleccionado.columns)
+    # Control para seleccionar el orden (ascendente o descendente)
+    orden = st.radio('Selecciona el orden:', ('Ascendente', 'Descendente'))
+    # Ordenar el DataFrame según la columna seleccionada y el orden elegido
+    if orden == 'Ascendente':
+        df_ordenado = df_seleccionado.sort_values(by=columna_ordenar, ascending=True)
+    else:
+        df_ordenado = df_seleccionado.sort_values(by=columna_ordenar, ascending=False)
+    # Mostrar el DataFrame ordenado
+    st.write('DataFrame Ordenado:')
+    st.write(df_ordenado)
+    columna_filtro = st.selectbox("Selecciona una columna para filtrar:", df.select_dtypes(include=['number']).columns)
+    if columna_filtro:
+     min_val, max_val = st.slider(
+        f"Selecciona el rango para {columna_filtro}:",
+        float(df[columna_filtro].min()),
+        float(df[columna_filtro].max()),
+        (float(df[columna_filtro].min()), float(df[columna_filtro].max())))
+    df_filtrado = df[(df[columna_filtro] >= min_val) & (df[columna_filtro] <= max_val)]
+    st.write("**Datos Filtrados:**")
+    st.write(df_filtrado)
 
-# Configurar la aplicación de Streamlit
-st.title("Cálculo Estadístico de Columnas")
-st.write("Seleccione una columna del conjunto de datos obtenido de la API REST Countries para calcular estadísticas.")
+    # Botón para descargar los datos filtrados
+    st.subheader("Exportar Datos Filtrados")
+    formato = st.radio("Elige el formato para descargar:", ('CSV', 'Excel'))
 
-# Mostrar datos originales si el usuario lo solicita
-if st.checkbox("Mostrar datos originales"):
-    st.dataframe(data)
+    @st.cache_data
+    def convertir_a_csv(df):
+        return df.to_csv(index=False).encode('utf-8')
 
-# Menú desplegable para seleccionar una columna
-columna = st.selectbox(
-    "Seleccione una columna para calcular estadísticas:",
-    ["Población", "Área (km²)", "Fronteras", "Idiomas", "Zonas Horarias"])
+    @st.cache_data
+    def convertir_a_excel(df):
+        import io
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='DatosFiltrados')
+            writer.save()
+        return buffer.getvalue()
 
-# Calcular estadísticas
-if columna:
-    st.write(f"**Estadísticas para la columna {columna}:**")
-    media = data[columna].mean()
-    mediana = data[columna].median()
-    desviacion = data[columna].std()
+    if formato == 'CSV':
+        st.download_button(
+            label="Descargar en CSV",
+            data=convertir_a_csv(df_filtrado),
+            file_name='datos_filtrados.csv',
+            mime='text/csv')
+    else:
+        st.download_button(
+            label="Descargar en Excel",
+            data=convertir_a_excel(df_filtrado),
+            file_name='datos_filtrados.xlsx',
+            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-    st.write(f"- Media: {media:,.2f}")
-    st.write(f"- Mediana: {mediana:,.2f}")
-    st.write(f"- Desviación estándar: {desviacion:,.2f}")
-
-    
 
