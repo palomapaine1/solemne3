@@ -10,9 +10,6 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import requests
-import matplotlib.pyplot as plt
-import seaborn as sns
-import io
 
 # Función para obtener los datos de la API REST Countries
 def fetch_data():
