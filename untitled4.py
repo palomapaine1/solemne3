@@ -40,7 +40,7 @@ if df is not None and not df.empty:
     if df is not None:
       st.write(df.head())
 
-   if df is not None and not df.empty:
+    if df is not None and not df.empty:
     # Verifica si las columnas necesarias existen
     if 'name' in df.columns:
         df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else None)
