@@ -129,7 +129,7 @@ def pagina_graficos():
         elif grafico_tipo == "Histograma":
             ax.hist(df[y_col], bins=30)
         elif grafico_tipo == "Pastel":
-            ax.pie(df[y
+            ax.pie(df[yx_col], df[y_col])
 
 
 
