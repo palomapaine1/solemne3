@@ -49,19 +49,56 @@ if df is not None:
     st.title("Interacción con los datos:")
     st.write("Mostrar datos originales:")
     st.dataframe(df_cleaned)
+    import streamlit as st
+import pandas as pd
+import requests
 
-    st.header("Selecciona una columna del dataframe utilizando un menú desplegable")
-    columnas = st.multiselect('Selecciona las columnas a visualizar', df_cleaned.columns.tolist(), default=df_cleaned.columns.tolist())
-    df_seleccionado = df_cleaned[columnas]
-    # Mostrar el DataFrame con las columnas seleccionadas
-    st.write('Columna Selecionada:')
-    st.write(df_seleccionado)
-    st.write("Estadísticas de las columnas seleccionadas:")
-    st.write("Media:",)
-    st.write(df_seleccionado.mean(numeric_only=True))
-    st.write("Mediana:",)
-    st.write(df_seleccionado.mean(numeric_only=True))
-    st.write("Desviación estándar:",)
-    st.write(df_seleccionado.std(numeric_only=True))
+# Función para obtener datos desde la API
+@st.cache_data
+def fetch_data():
+    url = "https://restcountries.com/v3.1/all"
+    response = requests.get(url)
+    data = response.json()
+    countries = []
+    for country in data:
+        try:
+            countries.append({
+                "Nombre": country.get("name", {}).get("common", "Desconocido"),
+                "Población": country.get("population", 0),
+                "Área (km²)": country.get("area", 0),
+                "Fronteras": len(country.get("borders", [])),
+                "Idiomas": len(country.get("languages", {})),
+                "Zonas Horarias": len(country.get("timezones", []))})
+        except Exception as e:
+            print(f"Error procesando el país: {e}")
+    return pd.DataFrame(countries)
+
+# Obtener los datos
+data = fetch_data()
+
+# Configurar la aplicación de Streamlit
+st.title("Cálculo Estadístico de Columnas")
+st.write("Seleccione una columna del conjunto de datos obtenido de la API REST Countries para calcular estadísticas.")
+
+# Mostrar datos originales si el usuario lo solicita
+if st.checkbox("Mostrar datos originales"):
+    st.dataframe(data)
+
+# Menú desplegable para seleccionar una columna
+columna = st.selectbox(
+    "Seleccione una columna para calcular estadísticas:",
+    ["Población", "Área (km²)", "Fronteras", "Idiomas", "Zonas Horarias"])
+
+# Calcular estadísticas
+if columna:
+    st.write(f"**Estadísticas para la columna {columna}:**")
+    media = data[columna].mean()
+    mediana = data[columna].median()
+    desviacion = data[columna].std()
+
+    st.write(f"- Media: {media:,.2f}")
+    st.write(f"- Mediana: {mediana:,.2f}")
+    st.write(f"- Desviación estándar: {desviacion:,.2f}")
+
     
 
