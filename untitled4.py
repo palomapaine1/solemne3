@@ -27,6 +27,7 @@ if response.status_code == 200:
     st.write(df.head())
 else:
     st.error('Error al obtener los datos de la API')# Llamar la función para obtener los datos
+    return None
 api_url = "https://restcountries.com/v3.1/all"
 df = obtener_datos_api(api_url)
 # Si hay datos, mostrar el DataFrame, mostrar dataframe con las columna seleccionadas, permitir filtrado y mostrar gráficos.
