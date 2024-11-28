@@ -29,18 +29,27 @@ def pagina_interaccion():
         st.title("Interacción con los Datos")
         st.write(df.head())
 
-        # Selección de columnas y estadísticas
-        df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else None)
-        df['Región'] = df['region']
-        df['Población'] = df['population']
-        df['Área (km²)'] = df['area']
+        # Manejar datos ausentes o nulos
+        df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else "Sin nombre")
+        df['Región'] = df['region'].fillna("Sin región")
+        df['Población'] = pd.to_numeric(df['population'], errors='coerce').fillna(0)
+        df['Área (km²)'] = pd.to_numeric(df['area'], errors='coerce').fillna(0)
         df['Fronteras'] = df['borders'].apply(lambda x: len(x) if isinstance(x, list) else 0)
         df['Idiomas Oficiales'] = df['languages'].apply(lambda x: len(x) if isinstance(x, dict) else 0)
         df['Zonas Horarias'] = df['timezones'].apply(lambda x: len(x) if isinstance(x, list) else 0)
         
-        # Filtrar columnas seleccionadas
-        columnas = ['Nombre', 'Región', 'Población', 'Área (km²)', 'Fronteras', 'Idiomas Oficiales', 'Zonas Horarias']
-        df_cleaned = df[columnas]
+        # Asegurar que las columnas sean numéricas para estadísticas
+        columnas_numericas = df_cleaned.select_dtypes(include=['number']).columns.tolist()
+        
+        # Filtro seguro para rangos
+        min_val, max_val = st.slider(
+            f"Selecciona el rango para {columna_filtro}:",
+            float(df_cleaned[columna_filtro].min()),
+            float(df_cleaned[columna_filtro].max()),
+            (float(df_cleaned[columna_filtro].min()), float(df_cleaned[columna_filtro].max())))
+
+
+      
         
         st.write("Datos procesados:")
         st.dataframe(df_cleaned)
@@ -114,9 +123,4 @@ def pagina_graficos():
         # Rango de ejes
         x_min, x_max = st.slider(f"Rango para {x_col}", float(df[x_col].min()), float(df[x_col].max()), (float(df[x_col].min()), float(df[x_col].max())))
         y_min, y_max = st.slider(f"Rango para {y_col}", float(df[y_col].min()), float(df[y_col].max()), (float(df[y_col].min()), float(df[y_col].max())))
-
-  
-
-
-sx
-
+        
