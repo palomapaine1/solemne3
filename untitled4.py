@@ -11,96 +11,96 @@ import streamlit as st
 import pandas as pd
 import requests
 
+import streamlit as st
+import pandas as pd
+import requests
+
 # Título de la aplicación
 st.title('Aplicación Web: Datos desde una API REST')
-# Verificar que la respuesta sea exitosa (código 200)
-df= pd.read_csv('datos_paises_procesados.xlsx')
+
+# Cargar datos desde un archivo Excel
+df = pd.read_csv('datos_paises_procesados.xlsx')
+st.write("Vista previa de los datos cargados:")
 st.write(df.head())
 
-        # Manejar datos ausentes o nulos
-        df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else "Sin nombre")
-        df['Región'] = df['region'].fillna("Sin región")
-        df['Población'] = pd.to_numeric(df['population'], errors='coerce').fillna(0)
-        df['Área (km²)'] = pd.to_numeric(df['area'], errors='coerce').fillna(0)
-        df['Fronteras'] = df['borders'].apply(lambda x: len(x) if isinstance(x, list) else 0)
-        df['Idiomas Oficiales'] = df['languages'].apply(lambda x: len(x) if isinstance(x, dict) else 0)
-        df['Zonas Horarias'] = df['timezones'].apply(lambda x: len(x) if isinstance(x, list) else 0)
-        
-        # Asegurar que las columnas sean numéricas para estadísticas
-        columnas_numericas = df_cleaned.select_dtypes(include=['number']).columns.tolist()
-        
-        # Filtro seguro para rangos
-        min_val, max_val = st.slider(
-            f"Selecciona el rango para {columna_filtro}:",
-            float(df_cleaned[columna_filtro].min()),
-            float(df_cleaned[columna_filtro].max()),
-            (float(df_cleaned[columna_filtro].min()), float(df_cleaned[columna_filtro].max())))
+# Procesar datos
+df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else "Sin nombre")
+df['Región'] = df['region'].fillna("Sin región")
+df['Población'] = pd.to_numeric(df['population'], errors='coerce').fillna(0)
+df['Área (km²)'] = pd.to_numeric(df['area'], errors='coerce').fillna(0)
+df['Fronteras'] = df['borders'].apply(lambda x: len(x) if isinstance(x, list) else 0)
+df['Idiomas Oficiales'] = df['languages'].apply(lambda x: len(x) if isinstance(x, dict) else 0)
+df['Zonas Horarias'] = df['timezones'].apply(lambda x: len(x) if isinstance(x, list) else 0)
 
+# Limpiar datos y asegurar columnas numéricas
+df_cleaned = df.copy()
+columnas_numericas = df_cleaned.select_dtypes(include=['number']).columns.tolist()
 
-      
-        
-        st.write("Datos procesados:")
-        st.dataframe(df_cleaned)
+# Mostrar datos procesados
+st.write("Datos procesados:")
+st.dataframe(df_cleaned)
 
-        # Selección de columna para mostrar estadísticas
-        columna_estadistica = st.selectbox("Selecciona una columna para mostrar estadísticas", df_cleaned.columns)
-        st.write(f"Estadísticas para la columna '{columna_estadistica}':")
-        st.write("Media:", df_cleaned[columna_estadistica].mean())
-        st.write("Mediana:", df_cleaned[columna_estadistica].median())
-        st.write("Desviación estándar:", df_cleaned[columna_estadistica].std())
+# Selección de columna para mostrar estadísticas
+columna_estadistica = st.selectbox("Selecciona una columna para mostrar estadísticas", columnas_numericas)
+st.write(f"Estadísticas para la columna '{columna_estadistica}':")
+st.write("Media:", df_cleaned[columna_estadistica].mean())
+st.write("Mediana:", df_cleaned[columna_estadistica].median())
+st.write("Desviación estándar:", df_cleaned[columna_estadistica].std())
 
-        # Ordenar datos
-        columna_ordenar = st.selectbox("Selecciona una columna para ordenar", df_cleaned.columns)
-        orden = st.radio("Selecciona el orden:", ('Ascendente', 'Descendente'))
-        df_ordenado = df_cleaned.sort_values(by=columna_ordenar, ascending=(orden == 'Ascendente'))
-        st.write("Datos ordenados:")
-        st.dataframe(df_ordenado)
+# Ordenar datos
+columna_ordenar = st.selectbox("Selecciona una columna para ordenar", df_cleaned.columns)
+orden = st.radio("Selecciona el orden:", ('Ascendente', 'Descendente'))
+df_ordenado = df_cleaned.sort_values(by=columna_ordenar, ascending=(orden == 'Ascendente'))
+st.write("Datos ordenados:")
+st.dataframe(df_ordenado)
 
-        # Filtrado de datos
-        columna_filtro = st.selectbox("Selecciona una columna para filtrar", df_cleaned.select_dtypes(include=['number']).columns)
-        if columna_filtro:
-            min_val, max_val = st.slider(
-                f"Selecciona el rango para {columna_filtro}:",
-                float(df_cleaned[columna_filtro].min()),
-                float(df_cleaned[columna_filtro].max()),
-                (float(df_cleaned[columna_filtro].min()), float(df_cleaned[columna_filtro].max())))
-            df_filtrado = df_cleaned[(df_cleaned[columna_filtro] >= min_val) & (df_cleaned[columna_filtro] <= max_val)]
-            st.write("Datos filtrados:")
-            st.dataframe(df_filtrado)
+# Filtrado de datos
+columna_filtro = st.selectbox("Selecciona una columna para filtrar", columnas_numericas)
+if columna_filtro:
+    min_val, max_val = st.slider(
+        f"Selecciona el rango para {columna_filtro}:",
+        float(df_cleaned[columna_filtro].min()),
+        float(df_cleaned[columna_filtro].max()),
+        (float(df_cleaned[columna_filtro].min()), float(df_cleaned[columna_filtro].max())))
+    df_filtrado = df_cleaned[(df_cleaned[columna_filtro] >= min_val) & (df_cleaned[columna_filtro] <= max_val)]
+    st.write("Datos filtrados:")
+    st.dataframe(df_filtrado)
 
-            # Exportar datos
-            st.subheader("Exportar Datos Filtrados")
-            formato = st.radio("Elige el formato para descargar:", ('CSV', 'Excel'))
+    # Exportar datos
+    st.subheader("Exportar Datos Filtrados")
+    formato = st.radio("Elige el formato para descargar:", ('CSV', 'Excel'))
 
-            def convertir_a_csv(df):
-                return df.to_csv(index=False).encode('utf-8')
+    def convertir_a_csv(df):
+        return df.to_csv(index=False).encode('utf-8')
 
-            def convertir_a_excel(df):
-                import io
-                buffer = io.BytesIO()
-                with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, index=False, sheet_name='DatosFiltrados')
-                    writer.save()
-                return buffer.getvalue()
+    def convertir_a_excel(df):
+        import io
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='DatosFiltrados')
+            writer.save()
+        return buffer.getvalue()
 
-            if formato == 'CSV':
-                st.download_button(
-                    label="Descargar en CSV",
-                    data=convertir_a_csv(df_filtrado),
-                    file_name='datos_filtrados.csv',
-                    mime='text/csv')
-            else:
-                st.download_button(
-                    label="Descargar en Excel",
-                    data=convertir_a_excel(df_filtrado),
-                    file_name='datos_filtrados.xlsx',
-                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                # Página de gráficos interactivos
+    if formato == 'CSV':
+        st.download_button(
+            label="Descargar en CSV",
+            data=convertir_a_csv(df_filtrado),
+            file_name='datos_filtrados.csv',
+            mime='text/csv')
+    else:
+        st.download_button(
+            label="Descargar en Excel",
+            data=convertir_a_excel(df_filtrado),
+            file_name='datos_filtrados.xlsx',
+            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+# Página de gráficos interactivos
 def pagina_graficos():
     api_url = "https://restcountries.com/v3.1/all"
-    df = obtener_datos_api(api_url)
-    
-    if df is not None:
+    response = requests.get(api_url)
+    if response.status_code == 200:
+        data = response.json()
+        df = pd.DataFrame(data)
         st.title("Gráficos Interactivos")
 
         # Selección de variables para los gráficos
@@ -109,6 +109,13 @@ def pagina_graficos():
         y_col = st.selectbox("Selecciona la variable para el eje Y", columnas_numericas)
 
         # Rango de ejes
-        x_min, x_max = st.slider(f"Rango para {x_col}", float(df[x_col].min()), float(df[x_col].max()), (float(df[x_col].min()), float(df[x_col].max())))
-        y_min, y_max = st.slider(f"Rango para {y_col}", float(df[y_col].min()), float(df[y_col].max()), (float(df[y_col].min()), float(df[y_col].max())))
-            
+        x_min, x_max = st.slider(
+            f"Rango para {x_col}", 
+            float(df[x_col].min()), 
+            float(df[x_col].max()), 
+            (float(df[x_col].min()), float(df[x_col].max())))
+        y_min, y_max = st.slider(
+            f"Rango para {y_col}", 
+            float(df[y_col].min()), 
+            float(df[y_col].max()), 
+            (float(df[y_col].min()), float(df[y_col].max())))
