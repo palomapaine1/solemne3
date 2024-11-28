@@ -123,4 +123,5 @@ def pagina_graficos():
         # Rango de ejes
         x_min, x_max = st.slider(f"Rango para {x_col}", float(df[x_col].min()), float(df[x_col].max()), (float(df[x_col].min()), float(df[x_col].max())))
         y_min, y_max = st.slider(f"Rango para {y_col}", float(df[y_col].min()), float(df[y_col].max()), (float(df[y_col].min()), float(df[y_col].max())))
+        gdfgt
         
