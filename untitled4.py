@@ -40,14 +40,42 @@ if df is not None and not df.empty:
     if df is not None:
       st.write(df.head())
 
-    # Selección de columnas relevantes
-    df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else None)
-    df['Región'] = df['region']
-    df['Población'] = df['population']
-    df['Área (km²)'] = df['area']
-    df['Fronteras'] = df['borders'].apply(lambda x: len(x) if isinstance(x, list) else 0)
-    df['Idiomas Oficiales'] = df['languages'].apply(lambda x: len(x) if isinstance(x, dict) else 0)
-    df['Zonas Horarias'] = df['timezones'].apply(lambda x: len(x) if isinstance(x, list) else 0)
+   if df is not None and not df.empty:
+    # Verifica si las columnas necesarias existen
+    if 'name' in df.columns:
+        df['Nombre'] = df['name'].apply(lambda x: x.get('common') if isinstance(x, dict) else None)
+    else:
+        df['Nombre'] = None
+
+    if 'region' in df.columns:
+        df['Región'] = df['region']
+    else:
+        df['Región'] = None
+
+    if 'population' in df.columns:
+        df['Población'] = df['population']
+    else:
+        df['Población'] = None
+
+    if 'area' in df.columns:
+        df['Área (km²)'] = df['area']
+    else:
+        df['Área (km²)'] = None
+
+    if 'borders' in df.columns:
+        df['Fronteras'] = df['borders'].apply(lambda x: len(x) if isinstance(x, list) else 0)
+    else:
+        df['Fronteras'] = 0
+
+    if 'languages' in df.columns:
+        df['Idiomas Oficiales'] = df['languages'].apply(lambda x: len(x) if isinstance(x, dict) else 0)
+    else:
+        df['Idiomas Oficiales'] = 0
+
+    if 'timezones' in df.columns:
+        df['Zonas Horarias'] = df['timezones'].apply(lambda x: len(x) if isinstance(x, list) else 0)
+    else:
+        df['Zonas Horarias'] = 0
 
     # Filtrar columnas seleccionadas
     columnas = ['Nombre', 'Región', 'Población', 'Área (km²)', 'Fronteras', 'Idiomas Oficiales', 'Zonas Horarias']
